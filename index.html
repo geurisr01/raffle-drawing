@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Raffle Drawing</title>
+<style>
+body {
+font-family: 'Arial', sans-serif;
+text-align: center;
+background: #f9f9f9;
+padding: 50px;
+}
+
+#countdown {
+font-size: 32px;
+margin-bottom: 20px;
+}
+
+#result {
+font-size: 28px;
+font-weight: bold;
+margin-top: 20px;
+}
+
+.winner-animate {
+animation: flipIn 0.6s ease, bounce 1.5s ease infinite;
+color: #ff3cac;
+text-shadow: 0 0 10px #fff, 0 0 20px #f0f, 0 0 30px #0ff;
+}
+
+@keyframes flipIn {
+from { transform: rotateY(90deg); opacity: 0; }
+to { transform: rotateY(0); opacity: 1; }
+}
+
+@keyframes bounce {
+0%, 100% { transform: translateY(0); }
+50% { transform: translateY(-10px); }
+}
+</style>
+</head>
+<body>
+
+<h1>Raffle Drawing</h1>
+<div id="raffle-box" style="font-size: 2em; text-align: center; padding: 30px;">
+<div id="countdown">Get ready... Drawing in <span id="timer">5</span> seconds</div>
+<div id="result" class="hidden"></div>
+<div id="retry-message" class="hidden" style="margin-top: 20px; font-size: 20px; color: red;"></div>
+</div>
+
+<!-- Sound -->
+<audio id="cheer" src="https://www.soundjay.com/human/cheering-01.mp3" preload="auto"></audio>
+
+<!-- Confetti -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+// Sample Entries
+const entries = [
+{ name: "Jane Smith", number: 1 },
+{ name: "John Doe", number: 2 },
+{ name: "Alice Johnson", number: 3 },
+{ name: "Bob Lee", number: 4 },
+// Add more entries as needed
+];
+
+const countdownEl = document.getElementById('timer');
+const resultEl = document.getElementById('result');
+const retryMessageEl = document.getElementById('retry-message');
+const cheer = document.getElementById('cheer');
+
+let timer = 5;
+let drawingInProgress = false;
+
+// Retry logic: try again in 5 minutes if no winner
+function startDrawing() {
+if (drawingInProgress) return; // Prevent multiple draws at the same time
+drawingInProgress = true;
+
+const countdown = setInterval(() => {
+timer--;
+countdownEl.textContent = timer;
+
+if (timer === 0) {
+clearInterval(countdown);
+document.getElementById('countdown').style.display = 'none';
+
+// Try to pick a random winner
+const winnerNumber = Math.floor(Math.random() * 100) + 1;
+
+// Find the entry corresponding to the winning number
+const winnerEntry = entries.find(entry => entry.number === winnerNumber);
+
+if (winnerEntry) {
+// Show the winner
+resultEl.innerHTML = `Congratulations <strong>${winnerEntry.name}</strong>, you have the winning number: <strong>${winnerNumber}</strong>`;
+resultEl.classList.remove('hidden');
+resultEl.classList.add('winner-animate');
+
+cheer.play();
+
+confetti({
+particleCount: 200,
+spread: 100,
+origin: { y: 0.6 }
+});
+} else {
+// If no winner found, display retry message and restart
+retryMessageEl.textContent = "No winner found. We will try again in 5 minutes!";
+retryMessageEl.classList.remove('hidden');
+
+// Reset countdown and restart after 5 seconds
+setTimeout(() => {
+resetDrawing();
+startDrawing();
+}, 5000); // Wait 5 seconds before retrying
+}
+}
+}, 1000);
+}
+
+// Reset countdown timer
+function resetDrawing() {
+timer = 5;
+countdownEl.textContent = timer;
+document.getElementById('countdown').style.display = 'block';
+resultEl.classList.add('hidden');
+retryMessageEl.classList.add('hidden');
+}
+
+// Start the first draw
+startDrawing();
+
+</script>
+
+</body>
+</html>
